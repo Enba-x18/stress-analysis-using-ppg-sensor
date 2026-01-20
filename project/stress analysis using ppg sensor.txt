@@ -1,0 +1,56 @@
+#define BLYNK_TEMPLATE_ID "YOUR_TEMPLATE_ID"
+#define BLYNK_TEMPLATE_NAME "STRESS MONITORING"
+#define BLYNK_AUTH_TOKEN "YOUR_AUTH_TOKEN"
+
+
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
+#include <Wire.h>
+
+
+char auth[] = BLYNK_AUTH_TOKEN;
+char ssid[] = "YOUR_WIFI_NAME";
+char pass[] = "YOUR_WIFI_PASSWORD";
+
+
+float heartRate, spo2, accelMag, perfusionIndex;
+int stressLevel;
+
+
+void simulateSensorData() {
+heartRate = random(60, 110);
+spo2 = random(940, 990) / 10.0;
+accelMag = random(10, 150) / 100.0;
+perfusionIndex = random(5, 100) / 10.0;
+}
+
+
+int calculateStressIndex(float HR, float motion, float perfIndex) {
+float stress = (HR * 0.5) + (motion * 10.0) + ((10.0 / (perfIndex + 0.1)) * 5.0);
+if (stress < 40) return 20;
+else if (stress < 70) return 50;
+else return 80;
+}
+
+
+void setup() {
+Serial.begin(115200);
+Blynk.begin(auth, ssid, pass);
+}
+
+
+void loop() {
+Blynk.run();
+simulateSensorData();
+stressLevel = calculateStressIndex(heartRate, accelMag, perfusionIndex);
+
+
+Blynk.virtualWrite(V1, heartRate);
+Blynk.virtualWrite(V2, spo2);
+Blynk.virtualWrite(V3, accelMag);
+Blynk.virtualWrite(V4, perfusionIndex);
+Blynk.virtualWrite(V6, stressLevel);
+
+
+delay(2000);
+}
